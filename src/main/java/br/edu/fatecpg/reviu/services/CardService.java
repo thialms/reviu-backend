@@ -13,6 +13,8 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.security.PublicKey;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -22,7 +24,7 @@ public class CardService {
     private final DeckRepository deckRepository;
 
     //CREATE
-    public CardResponseDTO createCard(Long deckId, CardRequestDTO request) {
+    public Card createCard(Long deckId, CardRequestDTO request) {
         Deck deck = deckRepository.findById(deckId)
                 .orElseThrow(() -> new EntityNotFoundException("Deck not found"));
 
@@ -31,24 +33,25 @@ public class CardService {
         card.setBackText(request.backText());
         card.setDeck(deck);
 
+        card.setRepetitions(0);
+        card.setInterval(1);
+        card.setEasinessFactor(2.5);
+        card.setNextReview(LocalDate.now());
 
-        cardRepository.save(card);
-        return new CardResponseDTO(card.getId(), card.getFrontText(), card.getBackText());
+        return cardRepository.save(card);
+
     }
 
     //VIEW
-    public List<CardResponseDTO> getCardByUser(Long deckId) {
+    public List<Card> getCardByDeck(Long deckId) {
         Deck deck = deckRepository.findById(deckId)
                 .orElseThrow(() -> new RuntimeException("Deck not found"));
 
-        List<Card> cards = cardRepository.findByDeckId(deckId);
-        return cards.stream()
-                .map(CardResponseDTO::new)
-                .toList();
+        return cardRepository.findByDeckId(deckId);
     }
 
     //UPDATE
-    public CardResponseDTO updateCard(Long deckId, Long cardId, CardRequestDTO request){
+    public Card updateCard(Long deckId, Long cardId, CardRequestDTO request){
         Deck deck = deckRepository.findById(deckId)
                 .orElseThrow(() -> new RuntimeException("Deck not found"));
 
@@ -61,8 +64,8 @@ public class CardService {
 
         card.setFrontText(request.frontText());
         card.setBackText(request.backText());
-        cardRepository.save(card);
-        return new CardResponseDTO(card);
+        return cardRepository.save(card);
+
     }
 
     //DELETE
@@ -80,5 +83,54 @@ public class CardService {
         cardRepository.delete(card);
     }
 
+    //LÓGICA DIFICULDADE & INTERVALO
+    public void processReview(Card card, int quality) {
 
+        double ef = card.getEasinessFactor();
+        int repetitions = card.getRepetitions();
+        int interval = card.getInterval();
+
+        // 1. Reseta se quality < 3 (erro sério)
+        if (quality < 3) {
+            repetitions = 0;
+            interval = 1; // revisa amanhã
+        }
+        else {
+            // acerto
+            repetitions++;
+
+            if (repetitions == 1) {
+                interval = 1; // 1º acerto
+            } else if (repetitions == 2) {
+                interval = 6; // 2º acerto
+            } else {
+                interval = (int) Math.round(interval * ef);
+            }
+
+            // cálculo do easiness factor
+            ef = ef + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
+            if (ef < 1.3)
+                ef = 1.3;
+        }
+
+        card.setRepetitions(repetitions);
+        card.setInterval(interval);
+        card.setEasinessFactor(ef);
+
+        card.setLastReview(LocalDate.now());
+        card.setNextReview(LocalDate.now().plusDays(interval));
+    }
+
+    //IMPLEMENTAÇÃO DA LÓGICA "DIFICULDADE & INTERVALO" NA CARTA
+    public Card reviewCard(Long cardId, int quality){
+        Card card = cardRepository.findById(cardId)
+                .orElseThrow(() -> new RuntimeException("Card not found"));
+
+        processReview(card, quality);
+        return cardRepository.save(card);
+    }
+
+    public List<Card> getDueCards(Long deckId){
+        return cardRepository.findByDeckIdAndNextReviewLessThanEqual(deckId, LocalDate.now());
+    }
 }

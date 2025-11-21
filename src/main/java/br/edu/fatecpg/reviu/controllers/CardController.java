@@ -1,11 +1,9 @@
 package br.edu.fatecpg.reviu.controllers;
 
+import br.edu.fatecpg.reviu.domain.card.Card;
 import br.edu.fatecpg.reviu.domain.deck.Deck;
 import br.edu.fatecpg.reviu.domain.user.User;
-import br.edu.fatecpg.reviu.dto.CardRequestDTO;
-import br.edu.fatecpg.reviu.dto.CardResponseDTO;
-import br.edu.fatecpg.reviu.dto.DeckRequestDTO;
-import br.edu.fatecpg.reviu.dto.DeckResponseDTO;
+import br.edu.fatecpg.reviu.dto.*;
 import br.edu.fatecpg.reviu.services.CardService;
 import br.edu.fatecpg.reviu.services.DeckService;
 import lombok.RequiredArgsConstructor;
@@ -25,22 +23,23 @@ public class CardController {
     @PostMapping
     public ResponseEntity<CardResponseDTO> createCard(@PathVariable Long deckId, @RequestBody CardRequestDTO request){
 
-        CardResponseDTO newDeck = cardService.createCard(deckId, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(newDeck);
+        Card newCard = cardService.createCard(deckId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new CardResponseDTO(newCard));
     }
 
     @GetMapping
-    public ResponseEntity<List<CardResponseDTO>> getCardByUser(@PathVariable Long deckId){
+    public ResponseEntity<List<CardResponseDTO>> getCardByDeck(@PathVariable Long deckId){
 
-        List<CardResponseDTO> cards= cardService.getCardByUser(deckId);
-        return ResponseEntity.ok(cards);
+        List<Card> cards= cardService.getCardByDeck(deckId);
+        List<CardResponseDTO> response= cards.stream().map(CardResponseDTO::new).toList();
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{cardId}")
     public ResponseEntity<CardResponseDTO> updateCard(@PathVariable Long deckId, @PathVariable Long cardId, @RequestBody CardRequestDTO request){
 
-        CardResponseDTO updateCard = cardService.updateCard(deckId, cardId, request);
-        return ResponseEntity.ok(updateCard);
+        Card updateCard = cardService.updateCard(deckId, cardId, request);
+        return ResponseEntity.ok(new CardResponseDTO(updateCard));
     }
 
     @DeleteMapping("/{cardId}")
@@ -49,5 +48,19 @@ public class CardController {
         cardService.deleteCard(deckId, cardId);
         return ResponseEntity.noContent().build();
 
+    }
+
+    @PostMapping("/{cardId}/review")
+    public ResponseEntity<CardResponseDTO> reviewCard(@PathVariable Long cardId, @RequestBody ReviewRequestDTO request){
+
+        Card reviewCard = cardService.reviewCard(cardId, request.quality());
+        return ResponseEntity.ok(new CardResponseDTO(reviewCard));
+    }
+
+    @GetMapping("/due")
+    public ResponseEntity<List<CardResponseDTO>> getDueCards(@PathVariable Long deckId){
+
+       List<Card> dueCards = cardService.getDueCards(deckId);
+       return ResponseEntity.ok(dueCards.stream().map(CardResponseDTO::new).toList());
     }
 }
