@@ -2,8 +2,8 @@ package br.edu.fatecpg.reviu.services;
 
 import br.edu.fatecpg.reviu.domain.deck.Deck;
 import br.edu.fatecpg.reviu.domain.user.User;
-import br.edu.fatecpg.reviu.dto.DeckRequestDTO;
-import br.edu.fatecpg.reviu.dto.DeckResponseDTO;
+import br.edu.fatecpg.reviu.dto.requests.DeckRequestDTO;
+import br.edu.fatecpg.reviu.dto.responses.DeckResponseDTO;
 import br.edu.fatecpg.reviu.repositories.DeckRepository;
 import br.edu.fatecpg.reviu.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;

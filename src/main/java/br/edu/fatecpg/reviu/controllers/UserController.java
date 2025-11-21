@@ -1,8 +1,12 @@
 package br.edu.fatecpg.reviu.controllers;
 
 import br.edu.fatecpg.reviu.domain.user.User;
-import br.edu.fatecpg.reviu.dto.ChangePasswordDTO;
+import br.edu.fatecpg.reviu.dto.requests.ChangePasswordDTO;
 import br.edu.fatecpg.reviu.repositories.UserRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +16,10 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/user")
+@Tag(
+        name = "Usuário",
+        description = "Endpoints relacionados à gestão de dados do usuário autenticado."
+)
 public class UserController {
 
     @Autowired
@@ -21,6 +29,15 @@ public class UserController {
     private PasswordEncoder passwordEncoder;
 
     @PutMapping("/change-password")
+    @Operation(
+            summary = "Altera a senha do usuário",
+            description = "Permite que o usuário autenticado altere sua senha atual para uma nova senha."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Senha alterada com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Senha atual incorreta ou dados inválidos"),
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+    })
     public ResponseEntity<?> changePassword(@Valid @RequestBody ChangePasswordDTO body) {
 
         String username = SecurityContextHolder.getContext()

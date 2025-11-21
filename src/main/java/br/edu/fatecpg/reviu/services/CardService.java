@@ -2,18 +2,13 @@ package br.edu.fatecpg.reviu.services;
 
 import br.edu.fatecpg.reviu.domain.card.Card;
 import br.edu.fatecpg.reviu.domain.deck.Deck;
-import br.edu.fatecpg.reviu.domain.user.User;
-import br.edu.fatecpg.reviu.dto.CardRequestDTO;
-import br.edu.fatecpg.reviu.dto.CardResponseDTO;
-import br.edu.fatecpg.reviu.dto.DeckRequestDTO;
-import br.edu.fatecpg.reviu.dto.DeckResponseDTO;
+import br.edu.fatecpg.reviu.dto.requests.CardRequestDTO;
 import br.edu.fatecpg.reviu.repositories.CardRepository;
 import br.edu.fatecpg.reviu.repositories.DeckRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.security.PublicKey;
 import java.time.LocalDate;
 import java.util.List;
 

@@ -1,0 +1,27 @@
+<openapi xmlns="http://www.springframework.org/schema/openapi"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://www.springframework.org/schema/openapi
+         https://www.springframework.org/schema/openapi/spring-openapi-3.0.xsd">
+
+    <info>
+        <title>Reviu API</title>
+        <version>1.0.0</version>
+        <description>API do sistema Reviu.</description>
+        <contact>
+            <name>Equipe Reviu</name>
+            <email>suporte@reviu.com</email>
+        </contact>
+    </info>
+
+    <servers>
+        <server>
+            <url>http://localhost:8080</url>
+            <description>Ambiente local</description>
+        </server>
+        <server>
+            <url>https://api.reviu.com</url>
+            <description>Produção</description>
+        </server>
+    </servers>
+
+</openapi>
