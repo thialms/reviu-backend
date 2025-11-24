@@ -3,6 +3,7 @@ package br.edu.fatecpg.reviu.services;
 import br.edu.fatecpg.reviu.domain.card.Card;
 import br.edu.fatecpg.reviu.domain.deck.Deck;
 import br.edu.fatecpg.reviu.dto.requests.CardRequestDTO;
+import br.edu.fatecpg.reviu.integration.DictionaryAPIService;
 import br.edu.fatecpg.reviu.repositories.CardRepository;
 import br.edu.fatecpg.reviu.repositories.DeckRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -17,6 +18,7 @@ import java.util.List;
 public class CardService {
     private final CardRepository cardRepository;
     private final DeckRepository deckRepository;
+    private final DictionaryAPIService  dictionaryAPIService;
 
     //CREATE
     public Card createCard(Long deckId, CardRequestDTO request) {
@@ -30,6 +32,11 @@ public class CardService {
 
         card.setImageUrl(request.imageUrl());
         card.setAudioUrl(request.audioUrl());
+
+        if (request.audioUrl() == null) {
+            String audioUrl = dictionaryAPIService.getFirstAudioUrl(request.frontText());
+            card.setAudioUrl(audioUrl);
+        }
 
         card.setRepetitions(0);
         card.setInterval(1);
