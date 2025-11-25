@@ -38,6 +38,26 @@ public class EmailService {
         }
     }
 
+    @Async
+    public void sendForgotPasswordEmail(User user) {
+        try {
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(fromAddress);
+            helper.setTo(user.getEmail());
+            helper.setSubject("Verifique seu e-mail - Reviu");
+
+            String htmlContent = buildHtml(user.getName(), user.getForgotPasswordCode());
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     private String buildHtml(String name, String code) {
         int year = Year.now().getValue();
 

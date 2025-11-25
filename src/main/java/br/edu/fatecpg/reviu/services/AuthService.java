@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AuthService {
 
-    public String generateVerificationCode() {
+    public String generateCode() {
         int code = (int)(Math.random() * 900000) + 100000; // 100000..999999
         return String.valueOf(code);
     }

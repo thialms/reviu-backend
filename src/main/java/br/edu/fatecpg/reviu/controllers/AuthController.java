@@ -1,10 +1,7 @@
 package br.edu.fatecpg.reviu.controllers;
 
 import br.edu.fatecpg.reviu.domain.user.User;
-import br.edu.fatecpg.reviu.dto.requests.EmailRequestDTO;
-import br.edu.fatecpg.reviu.dto.requests.LoginRequestDTO;
-import br.edu.fatecpg.reviu.dto.requests.RegisterRequestDTO;
-import br.edu.fatecpg.reviu.dto.requests.VerifyCodeDTO;
+import br.edu.fatecpg.reviu.dto.requests.*;
 import br.edu.fatecpg.reviu.dto.responses.LoginAndRegisterResponseDTO;
 import br.edu.fatecpg.reviu.infra.security.TokenService;
 import br.edu.fatecpg.reviu.repositories.UserRepository;
@@ -76,8 +73,6 @@ public class AuthController {
             newUser.setName(body.name());
             newUser.setUsername(body.username());
 
-            String code = authService.generateVerificationCode();
-            newUser.setVerificationCode(code);
             newUser.setVerificationExpiry(Instant.now().plus(1, ChronoUnit.HOURS));
             newUser.setVerified(false);
 
@@ -146,13 +141,50 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Usuário já verificado.");
         }
 
-        String newCode = authService.generateVerificationCode();
+        String newCode = authService.generateCode();
         user.setVerificationCode(newCode);
         user.setVerificationExpiry(Instant.now().plus(1, ChronoUnit.HOURS));
         userRepository.save(user);
 
         emailService.sendVerificationEmail(user);
 
-        return ResponseEntity.ok("Novo código enviado para seu e-mail.");
+        return ResponseEntity.ok("Novo código enviado para o seu e-mail.");
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody EmailRequestDTO request){
+        User user = this.userRepository.findByEmail(request.email()).orElseThrow(() -> new RuntimeException("User not found"));
+
+        String code = authService.generateCode();
+        user.setForgotPasswordCode(code);
+        user.setForgotPasswordExpiry(Instant.now().plus(1, ChronoUnit.HOURS));
+        userRepository.save(user);
+
+        emailService.sendForgotPasswordEmail(user);
+        return ResponseEntity.ok("Código de redefinição de senha enviado para o seu e-mail.");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetForgotPassword(@Valid @RequestBody ResetForgotPasswordDTO request){
+        Optional<User> optionalUser = userRepository.findByForgotPasswordCode(request.code());
+
+        if (optionalUser.isEmpty()) {
+            return ResponseEntity.badRequest().body("Usuário não encontrado.");
+        }
+
+        User user = optionalUser.get();
+
+        if (user.getForgotPasswordExpiry() != null &&
+                Instant.now().isAfter(user.getForgotPasswordExpiry())) {
+            return ResponseEntity.badRequest().body("Código expirado. Solicite um novo.");
+        }
+
+        // Redefine a senha do usuário
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        user.setForgotPasswordExpiry(null);
+        user.setForgotPasswordCode(null);
+        userRepository.save(user);
+
+        return ResponseEntity.ok("Senha alterada com sucesso!");
     }
 }
