@@ -112,7 +112,7 @@ public class CardController {
     })
     public ResponseEntity<CardResponseDTO> reviewCard(@PathVariable Long cardId, @RequestBody ReviewRequestDTO request){
 
-        Card reviewCard = cardService.reviewCard(cardId, request.quality());
+        Card reviewCard = cardService.reviewCard(cardId, request.rating());
         return ResponseEntity.ok(new CardResponseDTO(reviewCard));
     }
 

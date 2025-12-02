@@ -19,6 +19,7 @@ public class CardService {
     private final CardRepository cardRepository;
     private final DeckRepository deckRepository;
     private final DictionaryAPIService  dictionaryAPIService;
+    private final FsrsService fsrsService;
 
     //CREATE
     private Card buildCard(Deck deck, CardRequestDTO request) {
@@ -31,24 +32,24 @@ public class CardService {
         card.setImageUrl(request.imageUrl());
         card.setAudioUrl(request.audioUrl());
 
-        // Só tenta buscar áudio se o usuário NÃO mandou um
-        if (request.audioUrl() == null) {
+        // Buscar áudio automático
+        if (request.audioUrl() == null && request.frontText() != null) {
 
             String word = request.frontText().trim();
 
-            // Se a palavra é válida para a Dictionary API
-            if (isValidDictionaryWord(word)) {
-
-                // Então puxa o áudio
+            if (!word.isBlank() && isValidDictionaryWord(word)) {
                 String audioUrl = dictionaryAPIService.getFirstAudioUrl(word);
-
                 card.setAudioUrl(audioUrl);
             }
         }
 
+        // FSRS valores iniciais
+        card.setDifficulty(0.3);
+        card.setStability(0.0);
+        card.setRetrievability(1.0);
+        card.setInterval(0);
         card.setRepetitions(0);
-        card.setInterval(1);
-        card.setEasinessFactor(2.5);
+        card.setLastReview(null);
         card.setNextReview(LocalDate.now());
 
         return card;
@@ -146,50 +147,13 @@ public class CardService {
         cardRepository.delete(card);
     }
 
-    //LÓGICA DIFICULDADE & INTERVALO
-    public void processReview(Card card, int quality) {
-
-        double ef = card.getEasinessFactor();
-        int repetitions = card.getRepetitions();
-        int interval = card.getInterval();
-
-        // 1. Reseta se quality < 3 (erro sério)
-        if (quality < 3) {
-            repetitions = 0;
-            interval = 1; // revisa amanhã
-        }
-        else {
-            // acerto
-            repetitions++;
-
-            if (repetitions == 1) {
-                interval = 1; // 1º acerto
-            } else if (repetitions == 2) {
-                interval = 6; // 2º acerto
-            } else {
-                interval = (int) Math.round(interval * ef);
-            }
-
-            // cálculo do easiness factor
-            ef = ef + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
-            if (ef < 1.3)
-                ef = 1.3;
-        }
-
-        card.setRepetitions(repetitions);
-        card.setInterval(interval);
-        card.setEasinessFactor(ef);
-
-        card.setLastReview(LocalDate.now());
-        card.setNextReview(LocalDate.now().plusDays(interval));
-    }
-
     //IMPLEMENTAÇÃO DA LÓGICA "DIFICULDADE & INTERVALO" NA CARTA
-    public Card reviewCard(Long cardId, int quality){
+    public Card reviewCard(Long cardId, int rating) {
         Card card = cardRepository.findById(cardId)
                 .orElseThrow(() -> new RuntimeException("Card not found"));
 
-        processReview(card, quality);
+        fsrsService.processFsrs(card, rating); // usa FSRS 4.5 (implementação acima)
+
         return cardRepository.save(card);
     }
 

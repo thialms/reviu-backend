@@ -5,45 +5,49 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDate;
 
-@Schema(name = "CardResponseDTO", description = "DTO de resposta para envio dos dados de um card")
+@Schema(name = "CardResponseDTO", description = "DTO de resposta contendo as informações atualizadas do card e FSRS")
 public record CardResponseDTO(
 
         @Schema(description = "ID único do card", example = "1")
         Long id,
 
-        @Schema(description = "Texto que aparece na frente do card", example = "O que é Java?")
+        @Schema(description = "Texto frontal do card", example = "What is polymorphism?")
         String frontText,
 
-        @Schema(description = "Texto que aparece no verso do card", example = "Uma linguagem de programação orientada a objetos.")
+        @Schema(description = "Texto traseiro do card", example = "Ability of objects to take many forms.")
         String backText,
 
-        @Schema(description = "Número de repetições do card no sistema SM2", example = "3")
-        int repetition,
+        @Schema(description = "Dificuldade atual do card (FSRS)", example = "0.32")
+        double difficulty,
 
-        @Schema(description = "Intervalo atual de revisão do card em dias", example = "5")
-        int interval,
+        @Schema(description = "Estabilidade atual do card (FSRS)", example = "12.5")
+        double stability,
 
-        @Schema(description = "Fator de facilidade do card (Easiness Factor) usado no SM2", example = "2.5")
-        double easinessFactor,
+        @Schema(description = "Retenção atual (R), baseada na curva de esquecimento", example = "0.83")
+        double retrievability,
 
-        @Schema(description = "Data da próxima revisão do card", example = "2025-11-25")
+        @Schema(description = "Data da última revisão")
+        LocalDate lastReview,
+
+        @Schema(description = "Data da próxima revisão agendada")
         LocalDate nextReview,
 
-        @Schema(description = "URL da imagem associada ao card (opcional)", example = "https://minhaapi.com/imagens/card1.png")
+        @Schema(description = "URL da imagem do card (opcional)")
         String imageUrl,
 
-        @Schema(description = "URL do áudio associado ao card (opcional)", example = "https://minhaapi.com/audios/card1.mp3")
+        @Schema(description = "URL do áudio do card (opcional)")
         String audioUrl
 
 ) {
-    public CardResponseDTO(Card card){
+    public CardResponseDTO(Card card) {
         this(
                 card.getId(),
                 card.getFrontText(),
                 card.getBackText(),
-                card.getRepetitions(),
-                card.getInterval(),
-                card.getEasinessFactor(),
+                card.getDifficulty(),
+                card.getStability(),
+                card.getRetrievability(),
+                card.getLastReview(),
                 card.getNextReview(),
                 card.getImageUrl(),
                 card.getAudioUrl()
